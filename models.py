@@ -26,17 +26,11 @@ class myGRU(nn.Module):
     # helper function to sample an index from a probability array
         indices = []
         
-        # Loop through entire batch
-        for out_row in outputs:
-            temp = out_row.cpu().numpy()
-
-            temp = temp / config['gen_temp'] 
-            dist = np.exp(temp) / np.sum(np.exp(temp)) 
-            choices = range(len(temp))
-           
-            indices.append(np.random.choice(choices, p=dist).tolist())
-            
-        return torch.tensor(indices) 
+        outputs = outputs.div(config['gen_temp'])
+        outputs = nn.Softmax(dim=1)(outputs)
+        outputs = torch.multinomial(outputs, 1)
+       
+        return outputs
     
     def forward(self, sequence):
         # Takes in the sequence of the form (batch_size x sequence_length x input_dim) and
@@ -76,7 +70,7 @@ class myGRU(nn.Module):
                         
             row_count = 0
             for i in indices:
-                next_chars[row_count][i] = 1
+                next_chars[row_count][i[0]] = 1
                 row_count += 1
 
             # Append metadata | next_char
@@ -115,17 +109,11 @@ class myLSTM(nn.Module):
     # helper function to sample an index from a probability array
         indices = []
         
-        # Loop through entire batch
-        for out_row in outputs:
-            temp = out_row.cpu().numpy()
-
-            temp = temp / config['gen_temp'] 
-            dist = np.exp(temp) / np.sum(np.exp(temp)) 
-            choices = range(len(temp))
-           
-            indices.append(np.random.choice(choices, p=dist).tolist())
-            
-        return torch.tensor(indices)
+        outputs = outputs.div(config['gen_temp'])
+        outputs = nn.Softmax(dim=1)(outputs)
+        outputs = torch.multinomial(outputs, 1)
+      
+        return outputs
     
     def forward(self, sequence):
         # Takes in the sequence of the form (batch_size x sequence_length x input_dim) and
@@ -169,7 +157,7 @@ class myLSTM(nn.Module):
                         
             row_count = 0
             for i in indices:
-                next_chars[row_count][i] = 1
+                next_chars[row_count][i[0]] = 1
                 row_count += 1
 
             # Append metadata | next_char
